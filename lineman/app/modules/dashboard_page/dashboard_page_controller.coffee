@@ -1,18 +1,25 @@
 angular.module('loomioApp').controller 'DashboardPageController', ($scope, Records) ->
 
-  $scope.page = {}
-  $scope.perPage = 25
+  $scope.pageHash    = { unread: {}, all: {} }
+  $scope.perPage     = { date: 25, group: 10 }
 
   $scope.refresh = (options = {}) ->
-    options['filter'] = $scope.filter
-    switch $scope.sort
-      when 'date'
-        options['per'] = $scope.perPage
-        options['from'] = $scope.page[$scope.filter] = $scope.page[$scope.filter] || 0
-        $scope.page[$scope.filter] = $scope.page[$scope.filter] + $scope.perPage
-        Records.discussions.fetchInboxByDate  options
-      when 'group'
-        Records.discussions.fetchInboxByGroup options
+    params =
+      sort:    $scope.sort
+      filter:  $scope.filter
+      per:     $scope.perPage[$scope.sort]
+      from:    $scope.limitFor(options['groupId'] or 'date')
+      groupId: options['groupId']
+    if $scope.sort == 'date' or options['groupId']
+      Records.discussions.fetchInboxByDate  params
+    else
+      Records.discussions.fetchInboxByGroup params
+
+  $scope.limitFor = (field = 'date') ->
+    $scope.pageHash[$scope.filter][field] or 0
+
+  $scope.iterateLimit = (field = 'date') ->
+    $scope.pageHash[$scope.filter][field] = $scope.limitFor(field) + $scope.perPage[$scope.sort]
 
   $scope.setOptions = (options = {}) ->
     $scope.filter = options['filter'] if options['filter']
@@ -29,12 +36,18 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
   $scope.footerReached = ->
     return false if $scope.loadingDiscussions
     $scope.loadingDiscussions = true
-    $scope.refresh().then ->
-      $scope.loadingDiscussions = false
+    $scope.loadMore().then -> $scope.loadingDiscussions = false
+
+  $scope.loadMoreFromGroup = (groupId) ->
+    return false if $scope.loadingDiscussions
+    $scope.loadingDiscussions = true
+    $scope.refresh({groupId: groupdId}).then -> $scope.loadingDiscussions = false
+
+  $scope.loadMore = (options = {}) ->
+    $scope.refresh(options).then -> $scope.iterateLimit(options)
 
   $scope.unread = (discussion) ->
     discussion.isUnread() or $scope.filter != 'unread'
-
 
   $scope.lastInboxActivity = (discussion) ->
     -discussion.lastInboxActivity()
