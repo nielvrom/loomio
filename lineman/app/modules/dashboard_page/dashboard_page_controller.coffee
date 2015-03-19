@@ -5,7 +5,6 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
 
   $scope.refresh = (options = {}) ->
     params =
-      sort:    $scope.sort
       filter:  $scope.filter
       per:     $scope.perPage[$scope.sort]
       from:    $scope.limitFor(options['groupId'] or 'date')
@@ -41,10 +40,10 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
   $scope.loadMoreFromGroup = (groupId) ->
     return false if $scope.loadingDiscussions
     $scope.loadingDiscussions = true
-    $scope.refresh({groupId: groupdId}).then -> $scope.loadingDiscussions = false
+    $scope.loadMore({groupId: groupdId}).then -> $scope.loadingDiscussions = false
 
   $scope.loadMore = (options = {}) ->
-    $scope.refresh(options).then -> $scope.iterateLimit(options)
+    $scope.refresh(options).then -> $scope.iterateLimit(options['groupId'])
 
   $scope.unread = (discussion) ->
     discussion.isUnread() or $scope.filter != 'unread'
