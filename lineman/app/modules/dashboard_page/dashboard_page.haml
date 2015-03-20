@@ -57,9 +57,9 @@
             .dashboard-page-loading.page-loading{ng-show: 'loadingDiscussions'}
               %i.fa.fa-lg.fa-spin.fa-circle-o-notch
           .dashboard-page-sort-date{ng-if: 'sort == "group"'}
-            .dashboard-page-group{ng-repeat: 'group in dashboardGroups() | orderBy:fullName'}
+            .dashboard-page-group{ng-repeat: 'group in dashboardGroups() | orderBy:groupName'}
               .dashboard-page-threads-container{ng-if: 'anyThisGroup(group)'}
                 %img.selector-list-item-group-logo.pull-left{src: "{{group.logoUrl()}}"}>
-                %h3.dashboard-page-group-name {{group.fullName()}}
+                %h3.dashboard-page-group-name {{group.name}}
                 .dashboard-page-threads
-                  %dashboard_page_thread{discussion: 'discussion', show-group-logo: true, ng-repeat: 'discussion in group.discussions() | orderBy:lastInboxActivity | filter:unread'}
+                  %dashboard_page_thread{discussion: 'discussion', show-group-logo: true, ng-repeat: 'discussion in group.organizationDiscussions() | orderBy:lastInboxActivity | limitByFn:limitFor:group.id | filter:unread'}

@@ -1,3 +1,3 @@
 angular.module('loomioApp').filter 'limitByFn', ->
-  (items, f) ->
-    items.slice 0, f()
+  (items, f, args) ->
+    items.slice 0, f(args) if items

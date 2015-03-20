@@ -8,10 +8,13 @@ class API::DiscussionsController < API::RestfulController
     respond_with_discussions
   end
 
+  def inbox_by_organization
+    @discussions = grouped inbox_threads.group_by(&:organization_id)
+    respond_with_discussions
+  end
+
   def inbox_by_group
-    @discussions = inbox_threads.group_by(&:group_id)
-                                .map { |g, discussions| discussions.first(Integer(params[:per_group] || 4)) }
-                                .flatten
+    @discussions = grouped inbox_threads.group_by(&:group_id)
     respond_with_discussions
   end
 
@@ -74,6 +77,10 @@ class API::DiscussionsController < API::RestfulController
                           .joined_to_current_motion
                           .preload(:current_motion, {group: :parent})
                           .order('motions.closing_at ASC, last_activity_at DESC')
+  end
+
+  def grouped(discussions)
+    discussions.map { |g, discussions| discussions.first(Integer(params[:per] || 5)) }.flatten
   end
 
   def discussion_reader
