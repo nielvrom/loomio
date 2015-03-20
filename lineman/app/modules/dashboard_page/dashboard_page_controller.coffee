@@ -38,13 +38,15 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
 
   $scope.footerReached = ->
     return false if $scope.loadingDiscussions
-    $scope.loadingDiscussions = true
-    $scope.loadMore().then -> $scope.loadingDiscussions = false
+    $scope.loadingDiscussionsDate = true
+    $scope.loadMore().then ->
+      $scope.loadingDiscussionsDate = false
 
-  $scope.loadMoreFromGroup = (groupId) ->
+  $scope.loadMoreFromGroup = (group) ->
     return false if $scope.loadingDiscussions
-    $scope.loadingDiscussions = true
-    $scope.loadMore({groupId: groupdId}).then -> $scope.loadingDiscussions = false
+    $scope["loadingDiscussions#{group.id}"] = true
+    $scope.loadMore({groupId: group.id}).then ->
+      $scope["loadingDiscussions#{group.id}"] = false
 
   $scope.loadMore = (options = {}) ->
     $scope.refresh(options).then -> $scope.iterateLimit(options['groupId'])
