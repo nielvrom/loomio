@@ -71,21 +71,19 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
   $scope.lastInboxActivity = (discussion) ->
     -discussion.lastInboxActivity()
 
-  $scope.startOfDay = ->
-    moment().startOf('day').clone()
-
   timeframe = (options = {}) ->
+    today = moment().startOf 'day'
     (discussion) ->
       discussion.lastInboxActivity()
-                .isBetween($scope.startOfDay().subtract(options['fromCount'] or 1, options['from']),
-                           $scope.startOfDay().subtract(options['toCount'] or 1, options['to']))
+                .isBetween(today.clone().subtract(options['fromCount'] or 1, options['from']),
+                           today.clone().subtract(options['toCount'] or 1, options['to']))
 
   inTimeframe = (fn) ->
     ->
       $scope.loadedCount() > 0 and _.find $scope.dashboardDiscussions(), (discussion) ->
         fn(discussion) and $scope.unread(discussion)
 
-  $scope.today = (discussion) -> discussion.lastInboxActivity().isAfter $scope.startOfDay()
+  $scope.today     = timeframe(from: 'second', toCount: -10, to: 'year')
   $scope.yesterday = timeframe(from: 'day', to: 'second')
   $scope.thisWeek  = timeframe(from: 'week', to: 'day')
   $scope.thisMonth = timeframe(from: 'month', to: 'week')
