@@ -25,9 +25,12 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
     $scope.sort   = options['sort']   if options['sort']
     $scope.refresh()
   $scope.setOptions sort: 'group', filter: 'all'
+  $scope.iterateLimit()
 
   $scope.dashboardDiscussions = ->
-    window.Loomio.currentUser.inboxDiscussions()
+    _.sortBy(window.Loomio.currentUser.inboxDiscussions(), (discussion) ->
+      $scope.lastInboxActivity(discussion))
+      .slice(0, $scope.limitFor('date'))
 
   $scope.dashboardGroups = ->
     window.Loomio.currentUser.groups()
