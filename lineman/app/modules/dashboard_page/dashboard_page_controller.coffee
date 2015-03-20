@@ -52,17 +52,18 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
     _.filter window.Loomio.currentUser.groups(), (group) -> group.isParent()
 
   $scope.footerReached = ->
-    return false if $scope.loadingDiscussions
+    return false if $scope.loadingDiscussionsDate
     $scope.loadingDiscussionsDate = true
     $scope.loadMore().then ->
       $scope.loadingDiscussionsDate = false
 
   $scope.loadMoreFromGroup = (group) ->
-    return false if $scope.loadingDiscussions
-    $scope["loadingDiscussions#{group.id}"] = true
-    $scope.loadMore({groupId: group.id}).then ->
+    loadKey = "loadingDiscussions#{group.id}"
+    return false if $scope[loadKey]
+    $scope[loadKey] = true
+    $scope.loadMore(groupId: group.id).then ->
       $scope.expandedGroups.push group.id
-      $scope["loadingDiscussions#{group.id}"] = false
+      $scope[loadKey] = false
 
   $scope.unread = (discussion) ->
     discussion.isUnread() or $scope.filter != 'unread'
@@ -73,40 +74,28 @@ angular.module('loomioApp').controller 'DashboardPageController', ($scope, Recor
   $scope.startOfDay = ->
     moment().startOf('day').clone()
 
-  $scope.today = (discussion) ->
-    discussion.lastInboxActivity().isAfter $scope.startOfDay()
+  timeframe = (options = {}) ->
+    (discussion) ->
+      discussion.lastInboxActivity()
+                .isBetween($scope.startOfDay().subtract(options['fromCount'] or 1, options['from']),
+                           $scope.startOfDay().subtract(options['toCount'] or 1, options['to']))
 
-  $scope.yesterday = (discussion) ->
-    discussion.lastInboxActivity().isBetween($scope.startOfDay().subtract(1, 'day'), $scope.startOfDay())
+  inTimeframe = (fn) ->
+    ->
+      $scope.loadedCount() > 0 and _.find $scope.dashboardDiscussions(), (discussion) ->
+        fn(discussion) and $scope.unread(discussion)
 
-  $scope.thisWeek = (discussion) ->
-    discussion.lastInboxActivity().isBetween($scope.startOfDay().subtract(1, 'week'), $scope.startOfDay().subtract(1, 'day'))
+  $scope.today = (discussion) -> discussion.lastInboxActivity().isAfter $scope.startOfDay()
+  $scope.yesterday = timeframe(from: 'day', to: 'second')
+  $scope.thisWeek  = timeframe(from: 'week', to: 'day')
+  $scope.thisMonth = timeframe(from: 'month', to: 'week')
+  $scope.older     = timeframe(fromCount: 3, from: 'month', to: 'month')
 
-  $scope.thisMonth = (discussion) ->
-    discussion.lastInboxActivity().isBetween($scope.startOfDay().subtract(1, 'month'), $scope.startOfDay().subtract(1, 'week'))
-
-  $scope.older = (discussion) ->
-    discussion.lastInboxActivity().isBefore($scope.startOfDay().subtract(1, 'month'))
-
-  $scope.anyToday = ->
-    $scope.loadedCount() > 0 and _.find $scope.dashboardDiscussions(), (discussion) ->
-      $scope.today(discussion) and $scope.unread(discussion)
-
-  $scope.anyYesterday = ->
-    $scope.loadedCount() > 0 and _.find $scope.dashboardDiscussions(), (discussion) ->
-      $scope.yesterday(discussion) and $scope.unread(discussion)
-
-  $scope.anyThisWeek = ->
-   $scope.loadedCount() > 0 and  _.find $scope.dashboardDiscussions(), (discussion) ->
-      $scope.thisWeek(discussion) and $scope.unread(discussion)
-
-  $scope.anyThisMonth = ->
-    $scope.loadedCount() > 0 and _.find $scope.dashboardDiscussions(), (discussion) ->
-      $scope.thisMonth(discussion) and $scope.unread(discussion)
-
-  $scope.anyOlder = ->
-    $scope.loadedCount() > 0 and _.find $scope.dashboardDiscussions(), (discussion) ->
-      $scope.older(discussion) and $scope.unread(discussion)
+  $scope.anyToday     = inTimeframe($scope.today)
+  $scope.anyYesterday = inTimeframe($scope.yesterday)
+  $scope.anyThisWeek  = inTimeframe($scope.thisWeek)
+  $scope.anyThisMonth = inTimeframe($scope.thisMonth)
+  $scope.anyOlder     = inTimeframe($scope.older)
 
   $scope.groupName = (group) ->
     group.name
