@@ -65,7 +65,7 @@ angular.module('loomioApp').controller 'DashboardPageController', (Records) ->
       @expandedGroups.push group.id
       @[loadKey] = false
 
-  @unread = (discussion) ->
+  @unread = (discussion) =>
     discussion.isUnread() or @filter != 'unread'
 
   @lastInboxActivity = (discussion) ->
@@ -100,3 +100,5 @@ angular.module('loomioApp').controller 'DashboardPageController', (Records) ->
   @anyThisGroup = (group) =>
     @loadedCount() > 0 and _.find group.discussions(), (discussion) =>
       @unread(discussion)
+
+  return
